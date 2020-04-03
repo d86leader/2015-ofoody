@@ -5,6 +5,8 @@ O'Foody
 
 SibirCTF 2015 O'Foody service
 
+Разбор: https://www.youtube.com/watch?v=oBwQtjcIx08
+
 Installation
 ------------
 
@@ -140,6 +142,7 @@ Credits
 -------
 
 Vladislav A. Retivykh
+d86leader
 
 License
 -------
