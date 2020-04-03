@@ -43,12 +43,10 @@ my %TABLES = (
 #==============================================================================
 sub _encode {
     my $string = shift;
-    my $encoded_string;
-    if ($LEGACY) {
-        $encoded_string = $string . $SALT;
-    } else {
+    my $encoded_string = $string . $SALT;
+    if (not $LEGACY) {
         my $sha1 = Digest::SHA1->new;
-        $sha1->add($string . $SALT);
+        $sha1->add($encoded_string);
         $encoded_string = $sha1->b64digest;
     }
     return $encoded_string;
