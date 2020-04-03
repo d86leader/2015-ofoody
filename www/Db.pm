@@ -21,26 +21,17 @@ use strict;
 use warnings FATAL => 'all';
 use utf8;
 
-my $LEGACY = 0;
-eval "use DBI; 1;"      or $LEGACY = 1;
-eval "use DBD::Pg; 1;"  or $LEGACY = 1;
+use DBI;
+use DBD::mysql;
 
-my %POSTGRES_SETTINGS = (
-    USER     => 'postgres',
-    PASSWORD => '',
+my %MYSQL_SETTINGS = (
+    USER     => 'ofoody',
+    PASSWORD => 'ofoody',
     HOST     => '127.0.0.1',
-    PORT     => '5432',
+    PORT     => '3306',
     DB       => 'ofoody'
 );
-my $PSQL_CMD = 'psql\
-    --tuples-only\
-    --username={USER}\
-    --host={HOST}\
-    --port={PORT}\
-    --dbname={DB}\
-    --command="{CMD}"
-';
-my $DBI_CMD = 'DBI:Pg:dbname={DB};host={HOST};port={PORT}';
+my $DBI_CMD = 'DBI:mysql:database={DB};host={HOST};port={PORT}';
 
 #===  FUNCTION  ===============================================================
 #         NAME: _format
@@ -114,22 +105,17 @@ sub create {
     }
     $fields_string = substr($fields_string, 0, -2);
     my $cmd_string = "CREATE TABLE IF NOT EXISTS $table_name($fields_string);";
-    my %POSTGRES = (
-        %POSTGRES_SETTINGS,
+    my %MYSQL = (
+        %MYSQL_SETTINGS,
         'CMD' => $cmd_string
     );
-    if ($LEGACY) {
-        $cmd_string = _format($PSQL_CMD, \%POSTGRES);
-        my $cmd = `$cmd_string`;
-    } else {
-        my $connection = DBI->connect(
-            _format($DBI_CMD, \%POSTGRES),
-            $POSTGRES_SETTINGS{'USER'},
-            $POSTGRES_SETTINGS{'PASSWORD'}
-        );
-        $connection->do($cmd_string);
-        $connection->disconnect();
-    }
+    my $connection = DBI->connect(
+        _format($DBI_CMD, \%MYSQL),
+        $MYSQL_SETTINGS{'USER'},
+        $MYSQL_SETTINGS{'PASSWORD'}
+    );
+    $connection->do($cmd_string);
+    $connection->disconnect();
     return 1;
 }
 
@@ -151,22 +137,17 @@ sub insert {
         $values_string .= ", '$item'";
     }
     my $cmd_string = "INSERT INTO $table_name VALUES (DEFAULT$values_string);";
-    my %POSTGRES = (
-        %POSTGRES_SETTINGS,
+    my %MYSQL = (
+        %MYSQL_SETTINGS,
         'CMD' => $cmd_string
     );
-    if ($LEGACY) {
-        $cmd_string = _format($PSQL_CMD, \%POSTGRES);
-        my $cmd = `$cmd_string`;
-    } else {
-        my $connection = DBI->connect(
-            _format($DBI_CMD, \%POSTGRES),
-            $POSTGRES_SETTINGS{'USER'},
-            $POSTGRES_SETTINGS{'PASSWORD'}
-        );
-        $connection->do($cmd_string);
-        $connection->disconnect();
-    }
+    my $connection = DBI->connect(
+        _format($DBI_CMD, \%MYSQL),
+        $MYSQL_SETTINGS{'USER'},
+        $MYSQL_SETTINGS{'PASSWORD'}
+    );
+    $connection->do($cmd_string);
+    $connection->disconnect();
     return 1;
 }
 
@@ -198,30 +179,20 @@ sub select {
         $cmd_string .= " WHERE $values_string";
     }
     $cmd_string .= " ORDER BY username;";
-    my %POSTGRES = (
-        %POSTGRES_SETTINGS,
+    my %MYSQL = (
+        %MYSQL_SETTINGS,
         'CMD' => $cmd_string
     );
     my @response;
-    if ($LEGACY) {
-        $cmd_string = _format($PSQL_CMD, \%POSTGRES);
-        my $tmp_response = `$cmd_string`;
-        my @response_strings = split /\n/, $tmp_response;
-        foreach my $item (@response_strings) {
-            $item =~ s/^\s+//;
-            push @response, [split(/\s+\| /, $item)];
-        }
-    } else {
-        my $connection = DBI->connect(
-            _format($DBI_CMD, \%POSTGRES),
-            $POSTGRES_SETTINGS{'USER'},
-            $POSTGRES_SETTINGS{'PASSWORD'}
-        );
-        my $cmd = $connection->prepare($cmd_string);
-        $cmd->execute();
-        @response = @{$cmd->fetchall_arrayref()};
-        $connection->disconnect();
-    }
+    my $connection = DBI->connect(
+        _format($DBI_CMD, \%MYSQL),
+        $MYSQL_SETTINGS{'USER'},
+        $MYSQL_SETTINGS{'PASSWORD'}
+    );
+    my $cmd = $connection->prepare($cmd_string);
+    $cmd->execute();
+    @response = @{$cmd->fetchall_arrayref()};
+    $connection->disconnect();
     return @response;
 }
 
@@ -250,23 +221,18 @@ sub update {
     }
     $new_values_string = substr($new_values_string, 0, -2);
     my $cmd_string = "UPDATE $table_name SET $new_values_string WHERE $values_string;";
-    my %POSTGRES = (
-        %POSTGRES_SETTINGS,
+    my %MYSQL = (
+        %MYSQL_SETTINGS,
         'CMD' => $cmd_string
     );
-    if ($LEGACY) {
-        $cmd_string = _format($PSQL_CMD, \%POSTGRES);
-        my $response = `$cmd_string`;
-    } else {
-        my $connection = DBI->connect(
-            _format($DBI_CMD, \%POSTGRES),
-            $POSTGRES_SETTINGS{'USER'},
-            $POSTGRES_SETTINGS{'PASSWORD'}
-        );
-        my $cmd = $connection->prepare($cmd_string);
-        $cmd->execute();
-        $connection->disconnect();
-    }
+    my $connection = DBI->connect(
+        _format($DBI_CMD, \%MYSQL),
+        $MYSQL_SETTINGS{'USER'},
+        $MYSQL_SETTINGS{'PASSWORD'}
+    );
+    my $cmd = $connection->prepare($cmd_string);
+    $cmd->execute();
+    $connection->disconnect();
     return 1;
 }
 
