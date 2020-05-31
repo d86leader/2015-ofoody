@@ -138,11 +138,18 @@ Exit codes
 101 - OK
 ```
 
+Sploits
+-------
+
+- [Bad cookie](./sploits/cookie.py)
+- [Database](./sploits/db.py)
+
 Credits
 -------
 
-Vladislav A. Retivykh
-d86leader
+Vladislav A. Retivykh  
+d86leader  
+imanashev  
 
 License
 -------
